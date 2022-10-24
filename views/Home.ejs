@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+     <meta charset="UTF-8">
+     <meta http-equiv="X-UA-Compatible" content="IE=edge">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>Demo socket.io</title>
+     <link href="styles.css">
+     <script src="jquery.js"></script>
+     <script src="socket.io/socket.io.js"></script>
+     <script>
+          var socket=io("http://localhost:3000")
+     </script>
+     <style>
+          .container{
+               width: 300px;
+               height: 300px;
+               background-color: red;
+               position: relative;
+          }
+               .box{
+                    width: 50px;
+                    height: 50px;
+                    position: absolute;
+                    transform: translateX(100%);
+                    right: 0;
+               }
+          .box_red{
+               background-color: red;
+               top:50px
+          }
+          .box_yellow{
+               background-color: yellow;
+          }
+          .box_blue{
+               background-color: blue;
+               top:100px
+          }
+     </style>
+</head>
+<body>
+    <div class="container">
+          <div class="box box_red"></div>
+          <div class="box box_blue"></div>
+          <div class="box box_yellow"></div>
+    </div>
+</body>
+<script>
+    var items=document.querySelectorAll(".box");
+    items.forEach((item,index)=>{
+          item.onclick=function(){
+               let value;
+               if(index==0){
+                    value="red"
+               }
+               else if(index==1)
+               {
+                    value="blue"
+               }
+               else{
+                    value="yellow"
+               }
+               socket.emit("User",value)
+               socket.on("Server",data=>{
+                    document.querySelector(".container").style.background=value
+               })
+          }
+    })
+</script>
+</html>

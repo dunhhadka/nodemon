@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+     <meta charset="UTF-8">
+     <meta http-equiv="X-UA-Compatible" content="IE=edge">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>Demo socket.io</title>
+     <link href="styles.css">
+     <script src="jquery.js"></script>
+     <script src="socket.io/socket.io.js"></script>
+     <script>
+          var socket=io("http://localhost:3000")
+     </script>
+     <style>
+         .box_chat{
+               width: 600px;
+               height: 600px;
+               border: 1px solid black;
+               margin-top: 20px;
+               display: flex;
+               
+         }
+         .Display_online{
+               width: 30%;
+               height: 100%;
+               border-right: 1px solid black;
+         }
+         .useronlie{
+               padding: 5px 0px 5px 5px;
+         }
+         .title{
+               width: 100%;
+               height: 30px;
+               display: flex;
+               align-items: center;
+               justify-content: center;
+         }
+         .box_input{
+               height: 30px;
+               width: 100%;
+               position: absolute;
+               bottom: 0;
+               border-top: 1px solid black;
+               display: flex;
+               align-items: center;
+         }
+         .Showchat{
+               width: 420px;
+               height: 100%;
+               position: relative;
+         }
+         .btnlogout{
+               position: absolute;
+               bottom: -50px;
+         }
+         .box_register{
+          display: block;
+         }
+         .chat{
+          width: 100%;
+          height: 570px;
+          overflow-y: scroll;
+          display: flex;
+          flex-direction: column;
+         }
+         .boxmess{
+          background-color: #eee;
+          margin-top: 5px;
+          display: inline;
+         }
+         h4{
+          margin: 0;
+         
+         }
+         .name_user_friend{
+               font-size: 15px;
+               font-weight: 400;
+         }
+         .box_mess_myuser{
+               display: flex;
+               flex-direction: column;
+               align-items: flex-end;
+         }
+     </style>
+</head>
+<body>
+     <div class="container">
+          <div class="box_register">
+               <input type="text" class="name_register"/>
+               <button type="button" value="register" class="btnRegister">Register</button>
+          </div>
+          <div class="box_chat">
+               <div class="Display_online">
+                    <div class="title">User Online</div>
+                    <div class="list_user">
+
+                    </div>
+               </div>
+               <div class="Showchat">
+                    <div class="chat">
+                        <div class="boxmess box_mess_myuser">
+                              <h4 class="name_user_friend">${data.user}</h4>
+                              <h4>${data.mess}</h4>
+                        </div>
+                    </div>
+                    <div class="box_input">
+                         <input type="text" class="send_mess">
+                         <button type="submit" class="send">Send</button>
+                    </div>
+               </div>
+               <button class="btnlogout">logout</button>
+          </div>
+     </div>
+</body>
+<script>
+     var name_register=document.querySelector(".name_register")
+     var btnRegister=document.querySelector(".btnRegister")
+     function renderlist(data){
+          var parent=document.querySelector(".list_user")
+          parent.innerHTML="";
+          data.forEach((user)=>{
+               var box=document.createElement("div");
+               box.classList.add("useronlie")
+               box.innerText=user;
+               parent.appendChild(box);
+          })
+     }
+     socket.on("server-send-list",data=>{
+          renderlist(data)
+     })
+     socket.on("register_success",mess=>{
+     if(document.querySelector(".box_chat").style.display=="flex")
+     {
+          alert(`tài khoản ${mess} vừa đăng nhập`)
+     }
+          })
+     var currentName;
+     btnRegister.onclick=function(){
+          var name=name_register.value;
+          if(name){
+               currentName=name_register.value;
+               name_register.value="";
+               socket.emit("user",name);
+               socket.on("server_register_fail",()=>{
+                    alert("Đã có tài khoản đăng nhập");
+               })
+               socket.on("success",()=>{
+                    alert("đăng nhập thành công");
+                    document.querySelector(".box_register").style.display="none"
+                    document.querySelector(".box_chat").style.display="flex"
+               })
+          }
+          else{
+               alert("vui long nhap ten")
+          }
+     }
+     var btnlogout=document.querySelector(".btnlogout");
+     btnlogout.onclick=function(){
+          socket.emit("logout");
+     }
+     socket.on("logoutsuccess",()=>{
+          alert("logout thanh cong")
+          document.querySelector(".box_register").style.display="block"
+          document.querySelector(".box_chat").style.display="none"
+     })
+     socket.on("userlogout",(data)=>{
+          alert(`tài khoản ${data.name} vừa logout`)
+          renderlist(data.list)
+     })
+     var send_mess=document.querySelector(".send_mess");
+     document.querySelector(".send").onclick=function(){
+          if(send_mess.value){
+               socket.emit("send_mess",send_mess.value)
+          }
+     }
+     socket.on("send_to_sender",data=>{
+         var chat=document.querySelector(".chat")
+         var box=document.createElement("div")
+         box.classList.add("boxmess","box_mess_myuser")
+         box.innerHTML=`
+          <h4 class="name_user_friend">${data.user}</h4>
+          <h4>${data.mess}</h4>
+         `
+         chat.append(box)
+     })
+     socket.on("send_to_receiver",data=>{
+          var chat=document.querySelector(".chat")
+          var box=document.createElement("div")
+         box.classList.add("boxmess","box_mess_friend")
+         box.innerHTML=`
+          <h4 class="name_user_friend">${data.user}</h4>
+          <h4>${data.mess}</h4>
+         `
+         chat.append(box)
+     })
+</script>
+</html>
